@@ -22,6 +22,20 @@ var (
 	nextId int = 1
 )
 
+func convertIToString(context *gin.Context, param string) (int, error) {
+	idParam := context.Param(param)
+	ID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return 0, err
+	}
+
+	return ID, nil
+}
+
+// todo: implement the `covertIDToString` function into all handlers in which it's needed
+// todo: find more ways to make this code more modular and abstract (maybe when finding a note with matching ID)
+// todo: make the code consistent
+
 func GetNotes(context *gin.Context) {
 	context.IndentedJSON(http.StatusOK, notes)
 }
