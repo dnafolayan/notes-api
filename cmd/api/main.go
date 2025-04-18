@@ -13,9 +13,9 @@ func main() {
 	router.GET("/notes", api.GetNotes)
 	router.GET("/notes/:id", api.GetNoteByID)
 	router.POST("/notes", api.PostNote)
-	router.PATCH("/notes/:id", api.ToggleCompleted)
-	router.PATCH("/notes/:id", api.ModifyDescription)
-	router.DELETE("/notes/:id", api.DeleteNote)
+	router.PATCH("/notes/completed/:id", api.ToggleCompleted)
+	router.PATCH("/notes/description/:id", api.ModifyDescription)
+	router.DELETE("/notes/delete/:id", api.DeleteNote)
 
 	if err := router.Run(":8080"); err != nil {
 		log.Fatal(err)

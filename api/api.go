@@ -41,8 +41,9 @@ func GetNotes(context *gin.Context) {
 }
 
 func ToggleCompleted(context *gin.Context) {
-	idParam := context.Param("id")
-	id, err := strconv.Atoi(idParam)
+	id, err := convertIToString(context, "id")
+	// idParam := context.Param("id")
+	// id, err := strconv.Atoi(idParam)
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid ID",
@@ -70,8 +71,9 @@ func ToggleCompleted(context *gin.Context) {
 }
 
 func ModifyDescription(context *gin.Context) {
-	idParam := context.Param("id")
-	id, err := strconv.Atoi(idParam)
+	id, err := convertIToString(context, "id")
+	// idParam := context.Param("id")
+	// id, err := strconv.Atoi(idParam)
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid ID",
@@ -111,8 +113,9 @@ func ModifyDescription(context *gin.Context) {
 }
 
 func GetNoteByID(context *gin.Context) {
-	idParam := context.Param("id")
-	id, err := strconv.Atoi(idParam)
+	id, err := convertIToString(context, "id")
+	// idParam := context.Param("id")
+	// id, err := strconv.Atoi(idParam)
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid ID",
@@ -190,8 +193,9 @@ func PostNote(context *gin.Context) {
 }
 
 func DeleteNote(context *gin.Context) {
-	idParam := context.Param("id")
-	id, err := strconv.Atoi(idParam)
+	id, err := convertIToString(context, "id")
+	// idParam := context.Param("id")
+	// id, err := strconv.Atoi(idParam)
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid ID",
