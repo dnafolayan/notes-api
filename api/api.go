@@ -22,7 +22,7 @@ var (
 	nextId int = 1
 )
 
-func convertIToString(context *gin.Context, param string) (int, error) {
+func convertIDToString(context *gin.Context, param string) (int, error) {
 	idParam := context.Param(param)
 	ID, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -32,18 +32,12 @@ func convertIToString(context *gin.Context, param string) (int, error) {
 	return ID, nil
 }
 
-// todo: implement the `covertIDToString` function into all handlers in which it's needed
-// todo: find more ways to make this code more modular and abstract (maybe when finding a note with matching ID)
-// todo: make the code consistent
-
 func GetNotes(context *gin.Context) {
 	context.IndentedJSON(http.StatusOK, notes)
 }
 
 func ToggleCompleted(context *gin.Context) {
-	id, err := convertIToString(context, "id")
-	// idParam := context.Param("id")
-	// id, err := strconv.Atoi(idParam)
+	id, err := convertIDToString(context, "id")
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid ID",
@@ -71,9 +65,7 @@ func ToggleCompleted(context *gin.Context) {
 }
 
 func ModifyDescription(context *gin.Context) {
-	id, err := convertIToString(context, "id")
-	// idParam := context.Param("id")
-	// id, err := strconv.Atoi(idParam)
+	id, err := convertIDToString(context, "id")
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid ID",
@@ -113,9 +105,7 @@ func ModifyDescription(context *gin.Context) {
 }
 
 func GetNoteByID(context *gin.Context) {
-	id, err := convertIToString(context, "id")
-	// idParam := context.Param("id")
-	// id, err := strconv.Atoi(idParam)
+	id, err := convertIDToString(context, "id")
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid ID",
@@ -193,9 +183,7 @@ func PostNote(context *gin.Context) {
 }
 
 func DeleteNote(context *gin.Context) {
-	id, err := convertIToString(context, "id")
-	// idParam := context.Param("id")
-	// id, err := strconv.Atoi(idParam)
+	id, err := convertIDToString(context, "id")
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid ID",
