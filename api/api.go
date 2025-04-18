@@ -140,7 +140,7 @@ func ToggleCompleted(context *gin.Context) {
 	})
 }
 
-func ModifyDescription(context *gin.Context) {
+func UpdateDescription(context *gin.Context) {
 	ID, err := convertIDToString(context, "id")
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{
