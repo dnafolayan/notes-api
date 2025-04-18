@@ -19,7 +19,7 @@ type Note struct {
 
 var (
 	notes      = []*Note{}
-	nextId int = 1
+	nextID int = 1
 )
 
 func convertIDToString(context *gin.Context, param string) (int, error) {
@@ -33,11 +33,11 @@ func convertIDToString(context *gin.Context, param string) (int, error) {
 }
 
 func GetNotes(context *gin.Context) {
-	context.IndentedJSON(http.StatusOK, notes)
+	context.JSON(http.StatusOK, notes)
 }
 
 func GetNoteByID(context *gin.Context) {
-	id, err := convertIDToString(context, "id")
+	ID, err := convertIDToString(context, "id")
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid ID",
@@ -47,7 +47,7 @@ func GetNoteByID(context *gin.Context) {
 	}
 
 	for _, note := range notes {
-		if note.ID == id {
+		if note.ID == ID {
 			context.JSON(http.StatusOK, gin.H{
 				"message": "successful",
 				"note":    note,
@@ -101,21 +101,19 @@ func PostNote(context *gin.Context) {
 		return
 	}
 
-	newNote.ID = nextId
-	nextId++
+	newNote.ID = nextID
+	nextID++
 
 	notes = append(notes, &newNote)
 
 	context.JSON(http.StatusCreated, gin.H{
 		"message": "Note added successfully",
-		"note":    newNote,
+		"note":    newNote, // go takes care of pointer dereferencing
 	})
-
-	// go takes care of pointer dereferencing
 }
 
 func ToggleCompleted(context *gin.Context) {
-	id, err := convertIDToString(context, "id")
+	ID, err := convertIDToString(context, "id")
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid ID",
@@ -125,7 +123,7 @@ func ToggleCompleted(context *gin.Context) {
 	}
 
 	for i := range notes {
-		if notes[i].ID == id {
+		if notes[i].ID == ID {
 			notes[i].Completed = !notes[i].Completed
 
 			context.JSON(http.StatusOK, gin.H{
@@ -143,7 +141,7 @@ func ToggleCompleted(context *gin.Context) {
 }
 
 func ModifyDescription(context *gin.Context) {
-	id, err := convertIDToString(context, "id")
+	ID, err := convertIDToString(context, "id")
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid ID",
@@ -165,7 +163,7 @@ func ModifyDescription(context *gin.Context) {
 	}
 
 	for _, note := range notes {
-		if note.ID == id {
+		if note.ID == ID {
 			note.Description = descriptionInput.Description
 
 			context.JSON(http.StatusOK, gin.H{
@@ -183,7 +181,7 @@ func ModifyDescription(context *gin.Context) {
 }
 
 func DeleteNote(context *gin.Context) {
-	id, err := convertIDToString(context, "id")
+	ID, err := convertIDToString(context, "id")
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid ID",
@@ -193,7 +191,7 @@ func DeleteNote(context *gin.Context) {
 	}
 
 	for i, note := range notes {
-		if note.ID == id {
+		if note.ID == ID {
 			notes = slices.Delete(notes, i, i+1)
 
 			context.JSON(http.StatusOK, gin.H{
