@@ -36,74 +36,6 @@ func GetNotes(context *gin.Context) {
 	context.IndentedJSON(http.StatusOK, notes)
 }
 
-func ToggleCompleted(context *gin.Context) {
-	id, err := convertIDToString(context, "id")
-	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid ID",
-		})
-
-		return
-	}
-
-	for i := range notes {
-		if notes[i].ID == id {
-			notes[i].Completed = !notes[i].Completed
-
-			context.JSON(http.StatusOK, gin.H{
-				"message": "successful",
-				"note":    notes[i],
-			})
-
-			return
-		}
-	}
-
-	context.JSON(http.StatusNotFound, gin.H{
-		"error": "note not found",
-	})
-}
-
-func ModifyDescription(context *gin.Context) {
-	id, err := convertIDToString(context, "id")
-	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid ID",
-		})
-
-		return
-	}
-
-	type DescriptionInput struct {
-		Description string `json:"description" binding:"required"`
-	}
-
-	var descriptionInput DescriptionInput
-
-	if err := context.BindJSON(&descriptionInput); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
-			"error": "missing field",
-		})
-	}
-
-	for _, note := range notes {
-		if note.ID == id {
-			note.Description = descriptionInput.Description
-
-			context.JSON(http.StatusOK, gin.H{
-				"message": "successful",
-				"note":    note,
-			})
-
-			return
-		}
-	}
-
-	context.JSON(http.StatusNotFound, gin.H{
-		"error": "note not found",
-	})
-}
-
 func GetNoteByID(context *gin.Context) {
 	id, err := convertIDToString(context, "id")
 	if err != nil {
@@ -180,6 +112,74 @@ func PostNote(context *gin.Context) {
 	})
 
 	// go takes care of pointer dereferencing
+}
+
+func ToggleCompleted(context *gin.Context) {
+	id, err := convertIDToString(context, "id")
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid ID",
+		})
+
+		return
+	}
+
+	for i := range notes {
+		if notes[i].ID == id {
+			notes[i].Completed = !notes[i].Completed
+
+			context.JSON(http.StatusOK, gin.H{
+				"message": "successful",
+				"note":    notes[i],
+			})
+
+			return
+		}
+	}
+
+	context.JSON(http.StatusNotFound, gin.H{
+		"error": "note not found",
+	})
+}
+
+func ModifyDescription(context *gin.Context) {
+	id, err := convertIDToString(context, "id")
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid ID",
+		})
+
+		return
+	}
+
+	type DescriptionInput struct {
+		Description string `json:"description" binding:"required"`
+	}
+
+	var descriptionInput DescriptionInput
+
+	if err := context.BindJSON(&descriptionInput); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"error": "missing field",
+		})
+	}
+
+	for _, note := range notes {
+		if note.ID == id {
+			note.Description = descriptionInput.Description
+
+			context.JSON(http.StatusOK, gin.H{
+				"message": "successful",
+				"note":    note,
+			})
+
+			return
+		}
+	}
+
+	context.JSON(http.StatusNotFound, gin.H{
+		"error": "note not found",
+	})
 }
 
 func DeleteNote(context *gin.Context) {
