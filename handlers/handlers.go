@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"slices"
 	"strconv"
@@ -22,6 +24,15 @@ var (
 	notes      = []*Note{}
 	nextID int = 1
 )
+
+func openDB() *sql.DB {
+	db, err := sql.Open("sqlite3", "./notes.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return db
+}
 
 func convertIDToString(context *gin.Context, param string) (int, error) {
 	idParam := context.Param(param)
@@ -63,7 +74,11 @@ func GetNoteByID(context *gin.Context) {
 	})
 }
 
-func PostNote(context *gin.Context) {
+func CreateNote(context *gin.Context) {
+	db := openDB()
+
+	defer db.Close()
+
 	body, err := io.ReadAll(context.Request.Body)
 
 	if err != nil || len(body) == 0 {
@@ -74,27 +89,28 @@ func PostNote(context *gin.Context) {
 		return
 	}
 
-	var newNote Note
+	var note Note
 
 	decoder := json.NewDecoder(bytes.NewReader(body))
 	decoder.DisallowUnknownFields()
 
-	if err := decoder.Decode(&newNote); err != nil {
+	if err := decoder.Decode(&note); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"error": "missing fields",
 		})
 
 		return
 	}
+	/*
+	 if err := context.BindJSON(&newNote); err != nil {
+	 	context.JSON(http.StatusBadRequest, gin.H{
+	 		"error": "something went wrong",
+	 	})
+	 	return
+	 }
+	*/
 
-	// if err := context.BindJSON(&newNote); err != nil {
-	// 	context.JSON(http.StatusBadRequest, gin.H{
-	// 		"error": "something went wrong",
-	// 	})
-	// 	return
-	// }
-
-	if newNote.Description == "" {
+	if note.Description == "" {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"error": "missing field",
 		})
@@ -102,14 +118,19 @@ func PostNote(context *gin.Context) {
 		return
 	}
 
-	newNote.ID = nextID
-	nextID++
+	query := `INSERT INTO notes (description, completed) VALUES (?, ?)`
 
-	notes = append(notes, &newNote)
+	if _, err = db.Exec(query, note.Description, note.Completed); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"error": err,
+		})
+
+		return
+	}
 
 	context.JSON(http.StatusCreated, gin.H{
 		"message": "Note added successfully",
-		"note":    newNote, // go takes care of pointer dereferencing
+		"note":    note, // go takes care of pointer dereferencing
 	})
 }
 

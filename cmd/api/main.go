@@ -10,11 +10,12 @@ import (
 
 func main() {
 	db.InitDB()
+
 	router := gin.Default()
 
 	router.GET("/notes", handlers.GetNotes)
 	router.GET("/notes/:id", handlers.GetNoteByID)
-	router.POST("/notes", handlers.PostNote)
+	router.POST("/notes", handlers.CreateNote)
 	router.PATCH("/notes/completed/:id", handlers.ToggleCompleted)
 	router.PATCH("/notes/description/:id", handlers.UpdateDescription)
 	router.DELETE("/notes/delete/:id", handlers.DeleteNote)
