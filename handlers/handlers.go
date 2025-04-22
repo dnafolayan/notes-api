@@ -96,18 +96,29 @@ func GetNoteByID(context *gin.Context) {
 		return
 	}
 
-	for _, note := range notes {
-		if note.ID == ID {
-			context.JSON(http.StatusOK, gin.H{
-				"message": "successful",
-				"note":    note,
-			})
+	db := openDB()
+	defer db.Close()
+
+	query := `SELECT id, description, completed FROM notes WHERE id = ?`
+
+	var note Note
+	var completedInt int
+
+	if err := db.QueryRow(query, ID).Scan(&note.ID, &note.Description, &completedInt); err != nil {
+		if err == sql.ErrNoRows {
+			respondWithCustomErr(context, http.StatusNotFound, "note not found")
 			return
 		}
+
+		respondWithErr(context, http.StatusInternalServerError, err)
+		return
 	}
 
-	context.JSON(http.StatusNotFound, gin.H{
-		"error": "note not found",
+	note.Completed = completedInt == 1
+
+	context.JSON(http.StatusOK, gin.H{
+		"message": "successful",
+		"note":    note,
 	})
 }
 
