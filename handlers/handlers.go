@@ -47,6 +47,12 @@ func respondWithErr(context *gin.Context, statusCode int, err error) {
 	})
 }
 
+func respondWithCustomErr(context *gin.Context, statusCode int, msg string) {
+	context.JSON(statusCode, gin.H{
+		"error": msg,
+	})
+}
+
 func GetNotes(context *gin.Context) {
 	db := openDB()
 	defer db.Close()
@@ -55,9 +61,7 @@ func GetNotes(context *gin.Context) {
 
 	rows, err := db.Query(query)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
+		respondWithErr(context, http.StatusInternalServerError, err)
 		return
 	}
 	defer rows.Close()
@@ -69,9 +73,7 @@ func GetNotes(context *gin.Context) {
 		var completedInt int
 
 		if err := rows.Scan(&note.ID, &note.Description, &completedInt); err != nil {
-			context.JSON(http.StatusInternalServerError, gin.H{
-				"error": err.Error(),
-			})
+			respondWithErr(context, http.StatusInternalServerError, err)
 			return
 		}
 
@@ -80,9 +82,7 @@ func GetNotes(context *gin.Context) {
 	}
 
 	if err := rows.Err(); err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
+		respondWithErr(context, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -92,9 +92,7 @@ func GetNotes(context *gin.Context) {
 func GetNoteByID(context *gin.Context) {
 	ID, err := convertIDToString(context, "id")
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid ID",
-		})
+		respondWithCustomErr(context, http.StatusBadRequest, "invalid ID")
 		return
 	}
 
@@ -104,7 +102,6 @@ func GetNoteByID(context *gin.Context) {
 				"message": "successful",
 				"note":    note,
 			})
-
 			return
 		}
 	}
@@ -122,10 +119,7 @@ func CreateNote(context *gin.Context) {
 	body, err := io.ReadAll(context.Request.Body)
 
 	if err != nil || len(body) == 0 {
-		context.JSON(http.StatusBadRequest, gin.H{
-			"error": "body cannot be empty",
-		})
-
+		respondWithCustomErr(context, http.StatusBadRequest, "body cannot be empty")
 		return
 	}
 
@@ -135,10 +129,7 @@ func CreateNote(context *gin.Context) {
 	decoder.DisallowUnknownFields()
 
 	if err := decoder.Decode(&note); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
-			"error": "missing fields",
-		})
-
+		respondWithCustomErr(context, http.StatusBadRequest, "missing field")
 		return
 	}
 	/*
@@ -151,20 +142,14 @@ func CreateNote(context *gin.Context) {
 	*/
 
 	if note.Description == "" {
-		context.JSON(http.StatusBadRequest, gin.H{
-			"error": "missing field",
-		})
-
+		respondWithCustomErr(context, http.StatusBadRequest, "missing field")
 		return
 	}
 
 	query := `INSERT INTO notes (description, completed) VALUES (?, ?)`
 
 	if _, err = db.Exec(query, note.Description, note.Completed); err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-
+		respondWithErr(context, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -177,10 +162,7 @@ func CreateNote(context *gin.Context) {
 func ToggleCompleted(context *gin.Context) {
 	ID, err := convertIDToString(context, "id")
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid ID",
-		})
-
+		respondWithCustomErr(context, http.StatusBadRequest, "invalid ID")
 		return
 	}
 
@@ -192,23 +174,16 @@ func ToggleCompleted(context *gin.Context) {
 				"message": "successful",
 				"note":    notes[i],
 			})
-
 			return
 		}
 	}
-
-	context.JSON(http.StatusNotFound, gin.H{
-		"error": "note not found",
-	})
+	respondWithCustomErr(context, http.StatusNotFound, "note not found")
 }
 
 func UpdateDescription(context *gin.Context) {
 	ID, err := convertIDToString(context, "id")
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid ID",
-		})
-
+		respondWithCustomErr(context, http.StatusBadRequest, "invalid ID")
 		return
 	}
 
@@ -219,9 +194,8 @@ func UpdateDescription(context *gin.Context) {
 	var descriptionInput DescriptionInput
 
 	if err := context.BindJSON(&descriptionInput); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
-			"error": "missing field",
-		})
+		respondWithCustomErr(context, http.StatusBadRequest, "missing field")
+		return
 	}
 
 	for _, note := range notes {
@@ -232,23 +206,16 @@ func UpdateDescription(context *gin.Context) {
 				"message": "successful",
 				"note":    note,
 			})
-
 			return
 		}
 	}
-
-	context.JSON(http.StatusNotFound, gin.H{
-		"error": "note not found",
-	})
+	respondWithCustomErr(context, http.StatusNotFound, "note not found")
 }
 
 func DeleteNote(context *gin.Context) {
 	ID, err := convertIDToString(context, "id")
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid ID",
-		})
-
+		respondWithCustomErr(context, http.StatusBadRequest, "invalid ID")
 		return
 	}
 
@@ -264,8 +231,5 @@ func DeleteNote(context *gin.Context) {
 			return
 		}
 	}
-
-	context.JSON(http.StatusNotFound, gin.H{
-		"error": "note not found",
-	})
+	respondWithCustomErr(context, http.StatusNotFound, "note not found")
 }
