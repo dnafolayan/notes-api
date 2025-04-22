@@ -1,6 +1,6 @@
 # Notes API
 
-A simple RESTful API built with Go and the Gin framework to manage notes. You can create, read, update, delete, and toggle the completion status of notes.
+A simple RESTful API built with Go, SQLite3 and the Gin framework to manage notes. You can create, read, update, delete, and toggle the completion status of notes.
 
 ## Getting Started
 

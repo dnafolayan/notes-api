@@ -3,19 +3,22 @@ package main
 import (
 	"log"
 
-	"github.com/dnafolayan/notes_api/api"
+	"github.com/dnafolayan/notes-api/db"
+	"github.com/dnafolayan/notes-api/handlers"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	db.InitDB()
+
 	router := gin.Default()
 
-	router.GET("/notes", api.GetNotes)
-	router.GET("/notes/:id", api.GetNoteByID)
-	router.POST("/notes", api.PostNote)
-	router.PATCH("/notes/completed/:id", api.ToggleCompleted)
-	router.PATCH("/notes/description/:id", api.UpdateDescription)
-	router.DELETE("/notes/delete/:id", api.DeleteNote)
+	router.GET("/notes", handlers.GetNotes)
+	router.GET("/notes/:id", handlers.GetNoteByID)
+	router.POST("/notes", handlers.CreateNote)
+	router.PATCH("/notes/completed/:id", handlers.ToggleCompleted)
+	router.PATCH("/notes/description/:id", handlers.UpdateDescription)
+	router.DELETE("/notes/delete/:id", handlers.DeleteNote)
 
 	if err := router.Run(":8080"); err != nil {
 		log.Fatal(err)
