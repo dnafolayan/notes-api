@@ -41,6 +41,12 @@ func convertIDToString(context *gin.Context, param string) (int, error) {
 	return ID, nil
 }
 
+func respondWithErr(context *gin.Context, statusCode int, err error) {
+	context.JSON(statusCode, gin.H{
+		"error": err.Error(),
+	})
+}
+
 func GetNotes(context *gin.Context) {
 	db := openDB()
 	defer db.Close()
