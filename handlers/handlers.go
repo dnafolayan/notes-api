@@ -90,11 +90,7 @@ func GetNotes(context *gin.Context) {
 }
 
 func GetNoteByID(context *gin.Context) {
-	ID, err := convertIDToString(context, "id")
-	if err != nil {
-		respondWithCustomErr(context, http.StatusBadRequest, "invalid ID")
-		return
-	}
+	ID := context.Param("id")
 
 	db := openDB()
 	defer db.Close()
@@ -171,11 +167,7 @@ func CreateNote(context *gin.Context) {
 }
 
 func ToggleCompleted(context *gin.Context) {
-	ID, err := convertIDToString(context, "id")
-	if err != nil {
-		respondWithCustomErr(context, http.StatusBadRequest, "invalid ID")
-		return
-	}
+	ID := context.Param("id")
 
 	db := openDB()
 	defer db.Close()
@@ -210,10 +202,21 @@ func ToggleCompleted(context *gin.Context) {
 }
 
 func UpdateDescription(context *gin.Context) {
-	ID, err := convertIDToString(context, "id")
-	if err != nil {
-		respondWithCustomErr(context, http.StatusBadRequest, "invalid ID")
-		return
+	ID := context.Param("id")
+
+	db := openDB()
+	defer db.Close()
+
+	var description string
+
+	query := `SELECT description FROM notes WHERE id = ?`
+	if err := db.QueryRow(query, ID).Scan(&description); err != nil {
+		if err == sql.ErrNoRows {
+			respondWithCustomErr(context, http.StatusNotFound, "note not found")
+			return
+		}
+
+		respondWithErr(context, http.StatusInternalServerError, err)
 	}
 
 	type DescriptionInput struct {
@@ -227,18 +230,15 @@ func UpdateDescription(context *gin.Context) {
 		return
 	}
 
-	for _, note := range notes {
-		if note.ID == ID {
-			note.Description = descriptionInput.Description
-
-			context.JSON(http.StatusOK, gin.H{
-				"message": "successful",
-				"note":    note,
-			})
-			return
-		}
+	if _, err := db.Exec(`UPDATE notes SET description = ? WHERE id = ?`, descriptionInput.Description, ID); err != nil {
+		respondWithErr(context, http.StatusInternalServerError, err)
+		return
 	}
-	respondWithCustomErr(context, http.StatusNotFound, "note not found")
+
+	context.JSON(http.StatusOK, gin.H{
+		"message":   "successful",
+		"completed": descriptionInput,
+	})
 }
 
 func DeleteNote(context *gin.Context) {
