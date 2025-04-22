@@ -177,18 +177,36 @@ func ToggleCompleted(context *gin.Context) {
 		return
 	}
 
-	for i := range notes {
-		if notes[i].ID == ID {
-			notes[i].Completed = !notes[i].Completed
+	db := openDB()
+	defer db.Close()
 
-			context.JSON(http.StatusOK, gin.H{
-				"message": "successful",
-				"note":    notes[i],
-			})
+	query := `SELECT completed FROM notes WHERE id = ?`
+
+	var status int
+	if err := db.QueryRow(query, ID).Scan(&status); err != nil {
+		if err == sql.ErrNoRows {
+			respondWithCustomErr(context, http.StatusNotFound, "note not found")
 			return
 		}
+
+		respondWithErr(context, http.StatusInternalServerError, err)
+		return
 	}
-	respondWithCustomErr(context, http.StatusNotFound, "note not found")
+
+	newStatus := 1
+	if status == 1 {
+		newStatus = 0
+	}
+
+	if _, err := db.Exec(`UPDATE notes SET completed = ? WHERE id = ?`, newStatus, ID); err != nil {
+		respondWithErr(context, http.StatusInternalServerError, err)
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{
+		"message":   "successful",
+		"completed": newStatus == 1,
+	})
 }
 
 func UpdateDescription(context *gin.Context) {
