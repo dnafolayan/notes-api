@@ -148,7 +148,6 @@ func CreateNote(context *gin.Context) {
 
 	context.JSON(http.StatusCreated, gin.H{
 		"message": "Note added successfully",
-		"note":    note, // go takes care of pointer dereferencing
 	})
 }
 
