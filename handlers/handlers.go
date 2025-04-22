@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -50,6 +51,7 @@ func GetNotes(context *gin.Context) {
 		respondWithErr(context, http.StatusInternalServerError, err)
 		return
 	}
+
 	defer rows.Close()
 
 	var notes []Note
@@ -65,6 +67,11 @@ func GetNotes(context *gin.Context) {
 
 		note.Completed = completedInt == 1
 		notes = append(notes, note)
+	}
+
+	if len(notes) == 0 {
+		respondWithCustomErr(context, http.StatusNotFound, "no notes found")
+		return
 	}
 
 	if err := rows.Err(); err != nil {
@@ -122,20 +129,13 @@ func CreateNote(context *gin.Context) {
 	decoder.DisallowUnknownFields()
 
 	if err := decoder.Decode(&note); err != nil {
-		respondWithCustomErr(context, http.StatusBadRequest, "missing field")
+		respondWithCustomErr(context, http.StatusBadRequest, "description field is required")
 		return
 	}
-	/*
-	 if err := context.BindJSON(&newNote); err != nil {
-	 	context.JSON(http.StatusBadRequest, gin.H{
-	 		"error": "something went wrong",
-	 	})
-	 	return
-	 }
-	*/
 
+	note.Description = strings.TrimSpace(note.Description)
 	if note.Description == "" {
-		respondWithCustomErr(context, http.StatusBadRequest, "missing field")
+		respondWithCustomErr(context, http.StatusBadRequest, "description field cannot be empty")
 		return
 	}
 
@@ -222,8 +222,8 @@ func UpdateDescription(context *gin.Context) {
 	}
 
 	context.JSON(http.StatusOK, gin.H{
-		"message":   "successful",
-		"completed": descriptionInput,
+		"message":     "successful",
+		"description": descriptionInput,
 	})
 }
 
