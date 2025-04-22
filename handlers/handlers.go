@@ -20,10 +20,7 @@ type Note struct {
 	Completed   bool   `json:"completed"`
 }
 
-var (
-	notes      = []*Note{}
-	nextID int = 1
-)
+var notes = []*Note{}
 
 func openDB() *sql.DB {
 	db, err := sql.Open("sqlite3", "./notes.db")
@@ -45,6 +42,44 @@ func convertIDToString(context *gin.Context, param string) (int, error) {
 }
 
 func GetNotes(context *gin.Context) {
+	db := openDB()
+	defer db.Close()
+
+	query := `SELECT id, description, completed FROM notes`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	defer rows.Close()
+
+	var notes []Note
+
+	for rows.Next() {
+		var note Note
+		var completedInt int
+
+		if err := rows.Scan(&note.ID, &note.Description, &completedInt); err != nil {
+			context.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		note.Completed = completedInt == 1
+		notes = append(notes, note)
+	}
+
+	if err := rows.Err(); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
 	context.JSON(http.StatusOK, notes)
 }
 
@@ -54,7 +89,6 @@ func GetNoteByID(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid ID",
 		})
-
 		return
 	}
 
@@ -121,8 +155,8 @@ func CreateNote(context *gin.Context) {
 	query := `INSERT INTO notes (description, completed) VALUES (?, ?)`
 
 	if _, err = db.Exec(query, note.Description, note.Completed); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
-			"error": err,
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
 		})
 
 		return
