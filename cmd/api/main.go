@@ -3,11 +3,13 @@ package main
 import (
 	"log"
 
+	"github.com/dnafolayan/notes-api/db"
 	"github.com/dnafolayan/notes-api/handlers"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	db.InitDB()
 	router := gin.Default()
 
 	router.GET("/notes", handlers.GetNotes)

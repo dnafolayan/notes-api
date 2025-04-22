@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-func initDB() {
+func InitDB() {
 	DB, err := sql.Open("sqlite3", "./notes.db")
 	if err != nil {
 		log.Fatal(err)
