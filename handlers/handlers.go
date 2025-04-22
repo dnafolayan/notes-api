@@ -7,8 +7,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"slices"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -20,8 +18,6 @@ type Note struct {
 	Completed   bool   `json:"completed"`
 }
 
-var notes = []*Note{}
-
 func openDB() *sql.DB {
 	db, err := sql.Open("sqlite3", "./notes.db")
 	if err != nil {
@@ -29,16 +25,6 @@ func openDB() *sql.DB {
 	}
 
 	return db
-}
-
-func convertIDToString(context *gin.Context, param string) (int, error) {
-	idParam := context.Param(param)
-	ID, err := strconv.Atoi(idParam)
-	if err != nil {
-		return 0, err
-	}
-
-	return ID, nil
 }
 
 func respondWithErr(context *gin.Context, statusCode int, err error) {
@@ -242,23 +228,32 @@ func UpdateDescription(context *gin.Context) {
 }
 
 func DeleteNote(context *gin.Context) {
-	ID, err := convertIDToString(context, "id")
-	if err != nil {
-		respondWithCustomErr(context, http.StatusBadRequest, "invalid ID")
+	ID := context.Param("id")
+
+	db := openDB()
+	defer db.Close()
+
+	query := `SELECT id FROM notes WHERE id = ?`
+
+	var noteID int
+
+	if err := db.QueryRow(query, ID).Scan(&noteID); err != nil {
+		if err == sql.ErrNoRows {
+			respondWithCustomErr(context, http.StatusNotFound, "note not found")
+			return
+		}
+
+		respondWithErr(context, http.StatusInternalServerError, err)
 		return
 	}
 
-	for i, note := range notes {
-		if note.ID == ID {
-			notes = slices.Delete(notes, i, i+1)
-
-			context.JSON(http.StatusOK, gin.H{
-				"message": "deleted successfully",
-				"note":    note,
-			})
-
-			return
-		}
+	if _, err := db.Exec(`DELETE FROM notes WHERE id = ?;`, ID); err != nil {
+		respondWithErr(context, http.StatusInternalServerError, err)
+		return
 	}
-	respondWithCustomErr(context, http.StatusNotFound, "note not found")
+
+	context.JSON(http.StatusOK, gin.H{
+		"message": "deleted successfully",
+		"noteID":  noteID,
+	})
 }
